@@ -6,6 +6,7 @@ Filenames:
     virksomhetssertifikat.pem
     private.pem
 """
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,15 +26,15 @@ class Config:
     virksomhetssertifikat: str = None
 
 
-def read_pem_keys(file_path: str = None, private: bool = True):
+def read_pem_keys(private: bool = True):
     """
 
     :param file_path:
     :param private:
     :return:
     """
-    if not file_path:
-        file_path = BASE_PATH / "private.pem" if private else BASE_PATH / "virksomhetssertifikat.pem"
+    key = "PRIVATE_KEY" if private else "VIRKSOMHETSSERTIFIKAT_KEY"
+    file_path = os.environ.get(key)
     with open(file_path, "r") as file:
         cert = file.read()
 
@@ -47,10 +48,9 @@ def read_pem_keys(file_path: str = None, private: bool = True):
     return cert
 
 
-def read_env_file(file_path: str = None) -> Dict:
+def read_env_file() -> Dict:
     """Loads .env file and returns config datamodel."""
-    if not file_path:
-        file_path = BASE_PATH / ".env"
+    file_path = os.environ.get("ENV_FILE")
 
     with open(file_path, 'r') as f:
         lines = f.readlines()

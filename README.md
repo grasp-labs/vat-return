@@ -13,9 +13,17 @@ The client can also serve as a building block
 that can be extended and integrated into other projects.
 
 ## Usage
-### Setting secrets
-To use the client directly, you will need to create a file named .env in the 
-root directory with the following contents:
+### Environemnt Variables
+Set the following environment varialbes as paths to files:
+````shell
+SET VIRKSOMHETSSERTIFIKAT_KEY=C:\....pem
+SET PRIVATE_KEY=C:\....pem
+SET ENV_FILE=C:\...\.env
+````
+
+### The ENV FILE
+To use the client directly, you will need to create a file named .env in a 
+directory.
 ````text
 USERNAME='value'
 PASSWORD='value'
@@ -29,7 +37,7 @@ and add the corresponding key for the variable. This file serves as a
 configuration file, storing the necessary environment variables for the client 
 to function properly. 
 
-## Certificate and private key
+### The Certificate and the private key
 Create a private.pem file containing your private key.
 ````text
 -----BEGIN PRIVATE KEY-----
