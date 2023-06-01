@@ -34,20 +34,12 @@ If these scopes are not available, you will need to request them from
 mva-modernisering@skatteetaten.no. Please note that obtaining these scopes may 
 also require additional calendar time.
 
-3. Using Maskinporten as a login option<br>
-Depending on your specific requirements, there are different login strategies 
-available. One approach is to use Maskinporten to access the 
-ID-porten token, which can then be exchanged for an Altinn token.
-
-**Further guidance on best practices will be provided after completing the on-going
-process with Skatteetaten.**
-Based on our current understanding, it is recommended that you order a 
-'virksomhetssertifikat' and grant permission to a user.
-You can order the certificate from either Buypass or Comfides.
-Remember you will need a test certificate and a production certificate.
 4. Use client<br>
 If the above steps are successful, you should be able to use and/or modify
 the client provided.
+
+**Further guidance will be provided after completing the on-going
+process with Skatteetaten to obtain the scopes, and testing.**
 
 We assume that structuring the messages to the 
 [xsd](https://github.com/Skatteetaten/mva-meldingen/tree/master/docs/informasjonsmodell_filer/xsd)
