@@ -1,6 +1,8 @@
 """Module for service utils."""
+from typing import Optional
 import urllib.parse
 from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass
 
 import jwt
 import requests
@@ -66,3 +68,47 @@ def get_maskinporten_token(
 
     response = requests.post(url, data=form_data, headers=headers)
     return response.json()
+
+
+@dataclass
+class QueryParamsAuthorize:
+    client_id: str
+    redirect_uri: str
+    response_type: str
+    code_challenge: str
+    acr_value: Optional[str] = None
+    response_mode: Optional[str] = None
+    ui_locales: Optional[str] = None
+    prompt: Optional[str] = None
+    state: Optional[str] = None  # Recommended
+    nonce: Optional[str] = None  # Recommended
+    scope: str = "openid"
+    code_challenge_method: str = "S256"
+
+    def get_query_params(self):
+        data = {k: v for k, v in self.__dict__.items() if v is not None}
+        return urllib.parse.urlencode(data)
+
+
+@dataclass
+class QueryParamsToken:
+    client_id: str
+    grant_type: str
+    code: str
+    redirect_uri: str
+    code_verifier: str
+
+
+def oidc_authorize(authorize_params: QueryParamsAuthorize):
+    """
+    Authorize with Id-porten.
+    :return:
+    """
+    base_url = "https://login.idporten.no/authorize?"  # TODO: This is not up and running.
+    url = base_url + authorize_params.get_query_params()
+    r = requests.get(url)
+    print(r.status_code)
+    print(r.content)
+    # with open("page.html", "w") as file:
+    #     file.write(r.text)
+    return r
