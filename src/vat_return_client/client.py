@@ -30,10 +30,17 @@ class VatReturn:
 
     """
 
-    def __init__(self, id_porten_token: str, username: str, password: str):
+    def __init__(
+            self,
+            id_porten_token: str,
+            username: str,
+            password: str,
+            altinn_env,
+    ):
         self.id_porten_token = id_porten_token
         self.username = username
         self.password = password
+        self.altinn_environment = altinn_env if altinn_env else "https://platform.tt02.altinn.no"
         self._altinn_token = None
 
     @property
@@ -52,8 +59,7 @@ class VatReturn:
         :return: Json response.
         """
         exchange_token_url = (
-            # "https://platform.tt02.altinn.no/authentication/api/v1/exchange/maskinporten"
-            "https://platform.altinn.no/authentication/api/v1/exchange/maskinporten"
+            f"{self.altinn_environment}/authentication/api/v1/exchange/id-porten"
         )
         headers = {
             "Authorization": f"Bearer {self.id_porten_token}",
