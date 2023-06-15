@@ -221,7 +221,7 @@ def get_id_token(
 
     # Connecting to the /token endpoint.
     response = requests.post(
-        "https://{}/token".format(auth_domain), headers=headers, data=payload
+        f"https://{auth_domain}/token", headers=headers, data=payload
     )
     if response.status_code != 200:
         print(response.status_code)
