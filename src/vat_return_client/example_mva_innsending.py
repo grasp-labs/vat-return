@@ -1,3 +1,12 @@
+"""
+This is an example on how to run the vat submission process.
+We have created a test user (required to do):
+- Organization number: 310332313
+- Test-id: 04815398780 (Used to log in to id-porten)
+
+Ref:
+Create test users - https://skatteetaten.github.io/mva-meldingen/kompensasjon_eng/test/
+"""
 import os
 
 from client import VatReturn
@@ -6,24 +15,19 @@ from get_id_porten_token import get_id_token
 ORG_NUMMER = "310332313"  # The org number for our test user.
 
 
-def get_example_files(file_name: str):
+def get_example_files(file_name: str, read_bytes: bool = False):
     from pathlib import Path
     path = Path(__file__).parent / "example_files" / file_name
+    if read_bytes:
+        with open(path, "rb") as file:
+            return file.read()
+
     with open(path, "r", encoding="UTF-8") as file:
         melding = file.read()
-        vat = melding.replace("\n", "")
-
-    return vat
+        return melding.replace("\n", "")
 
 
-def get_appendix(file_name: str):
-    from pathlib import Path
-    path = Path(__file__).parent / "example_files" / file_name
-    with open(path, "rb") as file:
-        return file.read()
-
-
-def vat_return_process():
+def vat_return_process(org_number: str):
     token = os.environ.get("ID_PORTEN_TOKEN", None)
     if token:
         id_porten_token_header = {"Authorization": token}
@@ -35,13 +39,13 @@ def vat_return_process():
     )
     vat_client.set_altinn_token()
     vat_message_delivery_filename = "message/compensation_vat_message.xml"
-    mva_message = get_appendix(file_name=vat_message_delivery_filename)
+    mva_message = get_example_files(file_name=vat_message_delivery_filename, read_bytes=True)
     print("---- Validating -----")
     validation = vat_client.validate_tax_return(body=mva_message)
     print(validation)
 
     print("---- Creating Instance -----")
-    instance = vat_client.create_instance(organization_number=ORG_NUMMER)
+    instance = vat_client.create_instance(organization_number=org_number)
     instance_url = instance["selfLinks"]["apps"]
     instance_data_url = instance["data"][0]["selfLinks"]["apps"]
 
@@ -57,7 +61,7 @@ def vat_return_process():
     )
 
     print("---- Upload Attachments -----")
-    vat_appendix = get_appendix("appendix/vat_appendix.xml")
+    vat_appendix = get_example_files("appendix/vat_appendix.xml", read_bytes=True)
     upload_attachment = vat_client.upload_attachments(
         instance_url=instance_url,
         content_type="text/xml",
@@ -85,4 +89,4 @@ if __name__ == "__main__":
     If you want to avoid logging in to id porten, set the environment
     variable ID_PORTEN_TOKEN=Bearer <id porten token>.
     """
-    vat_return_process()
+    vat_return_process(org_number=ORG_NUMMER)
