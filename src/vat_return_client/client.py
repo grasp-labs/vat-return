@@ -1,42 +1,41 @@
 """
 The VAT Return Client.
 Reference:
-- https://skatteetaten.github.io/mva-meldingen/english/api/
-- https://skd.apps.tt02.altinn.no/skd/mva-melding-innsending-etm2/swagger/index.html
-
-Functions for the following categories of tax return:
-- VAT-return (RF-0002/0004)
-- VAT-return for reverse liability (RF-0005)
-- Tax return for VAT compensation (RF-0009)
-
-Before using the client one have to:
-1. Apply for access to samarbeidsportalen: https://samarbeid.digdir.no/maskinporten/konsument/119
-2. Create Virksomhetssertifikat: https://altinn.github.io/docs/api/rest/kom-i-gang/virksomhet/#autentisering-med-kun-maskinporten
-3. Set up access to Maskinporten: https://docs.digdir.no/docs/Maskinporten/maskinporten_sjolvbetjening_web
-4. Set up integration with the required scopes: https://skatteetaten.github.io/mva-meldingen/documentation/idportenautentisering/
-
-If scopes does noe appear, it needs to be ordered from skatteettaten.
-
-The VatReturl instance begins with an ID-porten token that will be
-exchanged to an Altinn token.
+- API: https://skatteetaten.github.io/mva-meldingen/english/api/
+- Swagger: https://skd.apps.tt02.altinn.no/skd/mva-melding-innsending-etm2/swagger/index.html
+- Environment list: https://skatteetaten.github.io/mva-meldingen/kompensasjon_eng/test/
 """
 import time
+from typing import Union, Dict
 
 import requests
 
 
 class VatReturn:
     """
+    Client code. Before use, log into id porten and get the 'Id porten
+    access token'.
+    Set the appropriate altinn environment, defaults to test environment.
+    Set the appropriate id porten environment, defaults to test environment.
+    Set the instance api url appropriate for the environment, test as default.
 
+    Url patterns:
+    instance = create_instance(...)
+    instance_url = instance["selfLinks"]["apps"]
+    instance_data_url = instance["data"][0]["selfLinks"]["apps"]
     """
 
     def __init__(
             self,
-            id_porten_auth_headers: dict,
-            altinn_env: str = "https://platform.tt02.altinn.no",
+            id_porten_auth_headers: Dict,
+            altinn_environment: str = "https://platform.tt02.altinn.no",
+            id_porten_environment: str = "idporten-api-sbstest.sits.no",
+            instance_api_url: str = "https://skd.apps.tt02.altinn.no/skd/mva-melding-innsending-etm2/instances"
     ):
         self.id_porten_auth_headers = id_porten_auth_headers
-        self.altinn_environment = altinn_env
+        self.altinn_environment = altinn_environment
+        self.id_porten_environment = id_porten_environment
+        self.instance_api_url = instance_api_url
         self._altinn_token = None
 
     @property
@@ -44,7 +43,7 @@ class VatReturn:
         return self._altinn_token
 
     @altinn_token.setter
-    def altinn_token(self, token: str) -> str:
+    def altinn_token(self, token: str):
         self._altinn_token = token
 
     def set_altinn_token(self):
@@ -62,7 +61,7 @@ class VatReturn:
         response = requests.get(exchange_token_url, headers=headers)
         self.altinn_token = response.content.decode("utf-8")
 
-    def validate_tax_return(self, body) -> str:
+    def validate_tax_return(self, body: bytes,) -> str:
         """
         Validates the content of a tax return and returns a response with
         any errors, deviations, and warnings.
@@ -72,64 +71,53 @@ class VatReturn:
         :param body: According to XSD: https://github.com/Skatteetaten/mva-meldingen/blob/master/docs/informasjonsmodell_filer/xsd/no.skatteetaten.fastsetting.avgift.mva.skattemeldingformerverdiavgift.v1.0.xsd
         :return: Validation result as xml byte string.
         """
-        env = "idporten-api-sbstest.sits.no"
         validate_tax_return_url = (
-            f"https://{env}/api/mva/grensesnittstoette/mva-melding/valider"
+            f"https://{self.id_porten_environment}/api/mva/grensesnittstoette/mva-melding/valider"
         )
         headers = self.id_porten_auth_headers
         headers["Content-Type"] = "application/xml"
-        addons = {
-            "Accept": "*/*",
-            "Cache-Control": "no-cache",
-            "Host": "idporten-api-sbstest.sits.no",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive",
-        }
-        headers.update(addons)
 
         validate_response = requests.post(
             validate_tax_return_url, headers=headers, data=body
         )
         return validate_response.content.decode("utf-8")
 
-    def create_instance(self, organization_number: str):
+    def create_instance(self, organization_number: str) -> Dict:
         """
         Creates an instance object in altinn. The instance will be used to
         populate information such as uploaded data, confirm and feedback.
 
-        The instance url to be used later on is in the return json.
-        response = create_instance(...)
-        instance_data_app_url = response.get("selfLinks").get("apps")
-
-        :return:
+        :param organization_number: Organization number.
+        :return: Instance as dict.
         """
-        instance_api_url = (
-            "https://skd.apps.tt02.altinn.no/skd/mva-melding-innsending-etm2/instances"
-        )
         headers = {
-            "Authorization": "Bearer {}".format(self.altinn_token),
+            "Authorization": f"Bearer {self.altinn_token}",
             "content-type": "application/json"
         }
 
         body = {
             "instanceOwner": {
-                "organisationNumber": "{}".format(organization_number)
+                "organisationNumber": f"{organization_number}"
                 }
         }
         response = requests.post(
-            instance_api_url, headers=headers, json=body
+            self.instance_api_url, headers=headers, json=body
         )
         return response.json()
 
     def upload_vat_submission(
             self, instance_data_app_url: str, content: str
-    ) -> dict:
+    ) -> Dict:
         """
         Upload VAT return submission by using the data api for the instance.
-        :return:
+
+        :param instance_data_app_url: Url to the data of the instance.
+        :param content: Vat submission.
+        :return: Data instance as dict.
         """
         headers = {
-            "Authorization": "Bearer {}".format(self.altinn_token),
+
+            "Authorization": f"Bearer {self.altinn_token}",
             "content-type": "application/xml"
         }
         response = requests.put(
@@ -137,10 +125,12 @@ class VatReturn:
         )
         return response.json()
 
-    def upload_vat_return(self, instance_url: str, content: str) ->dict:
+    def upload_vat_return(self, instance_url: str, content: bytes) -> Dict:
         """
         Upload VAT return xml document to the instance.
-        :return:
+        :param instance_url: Url to the instance.
+        :param content: Vat message.
+        :return: Data instance as dict.
         """
         headers = {
             "Authorization": f"Bearer {self.altinn_token}",
@@ -159,7 +149,7 @@ class VatReturn:
             content_type: str,
             file_name: str,
             content: bytes,
-    ) -> dict:
+    ) -> Dict:
         """
         It is possible to upload from 0 to 57 attachments, with an individual
         size of 25MB.
@@ -180,7 +170,11 @@ class VatReturn:
         - image/jpeg
         - image/png
 
-        :return:
+        :param instance_url: Url to the instance.
+        :param content_type: Attachment content-type.
+        :param file_name: Attachment filename with suffix (.pdf, .xml, ...)
+        :param content: Attachment as bytes.
+        :return: Data instance as dict.
         """
         url = f"{instance_url}/data?datatype=binaerVedlegg"
         headers = {
@@ -193,12 +187,13 @@ class VatReturn:
         )
         return response.json()
 
-    def ship_to_next_process(self, instance_url: str):
+    def ship_to_next_process(self, instance_url: str) -> Union[Dict, str]:
         """
         Move the instance to the next step for VAT return filing in the
         application process.
 
-        :return:
+        :param instance_url: Url to the instance.
+        :return: Process description as dict.
         """
         url = f"{instance_url}/process/next"
         headers = {
@@ -217,13 +212,17 @@ class VatReturn:
 
     def retrieve_feedback(
             self, instance_url: str, max_retry: int = 5, wait_time: int = 2
-    ) -> dict:
+    ) -> Dict:
         """
         Return the instance when the Tax Administration has given feedback.
 
         - End user is waiting on feedback.
         - After the status-endpoint has returned isFeedbackProvided : true
-        :return:
+
+        :param instance_url: Url to the instance.
+        :param max_retry: How many time to retry.
+        :param wait_time: How long to wait between requests.
+        :return: Feedback as dict.
         """
         url = f"{instance_url}/feedback"
         headers = {
@@ -246,11 +245,12 @@ class VatReturn:
         response = requests.get(url, headers=headers)
         return response.json()
 
-    def get_feedback_files(self, instance_data_app_url: str):
+    def get_feedback_files(self, instance_data_app_url: str) -> bytes:
         """
         Once the Tax Administration has given feedback, the files for the
         feedback can be downloaded from the instance.
-        :return:
+        :param instance_data_app_url: URl to the file data app url.
+        :return: Files as bytes.
         """
         headers = {
             "Authorization": f"Bearer {self.altinn_token}",
