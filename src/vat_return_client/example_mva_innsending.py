@@ -11,8 +11,12 @@ import os
 
 from client import VatReturn
 from get_id_porten_token import get_id_token
-
-ORG_NUMMER = "310332313"  # The org number for our test user.
+from settings import (
+    ALTINN_BASE,
+    VALIDATION_BASE,
+    INSTANCE_API_URL,
+    ORG_NUMBER,
+)
 
 
 def get_example_files(file_name: str, read_bytes: bool = False):
@@ -35,7 +39,10 @@ def vat_return_process(org_number: str):
         id_porten_token_header = get_id_token()
 
     vat_client = VatReturn(
-        id_porten_auth_headers=id_porten_token_header
+        id_porten_auth_headers=id_porten_token_header,
+        altinn_environment=ALTINN_BASE,
+        id_porten_environment=VALIDATION_BASE,
+        instance_api_url=INSTANCE_API_URL,
     )
     vat_client.set_altinn_token()
     vat_message_delivery_filename = "message/compensation_vat_message.xml"
@@ -89,4 +96,4 @@ if __name__ == "__main__":
     If you want to avoid logging in to id porten, set the environment
     variable ID_PORTEN_TOKEN=Bearer <id porten token>.
     """
-    vat_return_process(org_number=ORG_NUMMER)
+    vat_return_process(org_number=ORG_NUMBER)

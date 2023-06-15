@@ -28,9 +28,9 @@ class VatReturn:
     def __init__(
             self,
             id_porten_auth_headers: Dict,
-            altinn_environment: str = "https://platform.tt02.altinn.no",
-            id_porten_environment: str = "idporten-api-sbstest.sits.no",
-            instance_api_url: str = "https://skd.apps.tt02.altinn.no/skd/mva-melding-innsending-etm2/instances"
+            altinn_environment: str,
+            id_porten_environment: str,
+            instance_api_url: str,
     ):
         self.id_porten_auth_headers = id_porten_auth_headers
         self.altinn_environment = altinn_environment

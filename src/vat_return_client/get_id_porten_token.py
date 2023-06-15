@@ -17,13 +17,14 @@ import jwt
 import requests
 from cryptography import x509
 
-AUTH_DOMAIN = "oidc-ver2.difi.no/idporten-oidc-provider"  # Test domain.
-ALGORITHMS = ["RS256"]
-SCOPES = "openid skatteetaten:mvameldingvalidering " \
-         "skatteetaten:mvameldinginnsending "
-ID_PORTEN_CLIENT_ID = "23cc2587-ea4e-4a5f-aa5c-dfce3d6c5f09"
-ID_PORTEN_TEST_PORT = 12345
-ID_PORTEN_REDIRECT_URI = "http://localhost:12345/token"
+from settings import (
+    ID_PORTEN_CLIENT_ID,
+    SERVER_PORT,
+    REDIRECT_URI,
+    ID_PORTEN_AUTH_DOMAIN,
+    ALGORITHMS,
+    SCOPES,
+)
 
 
 class BrowserRedirectHandler(BaseHTTPRequestHandler):
@@ -106,7 +107,7 @@ def get_jwks() -> dict:
     :returns: The JWKS as a dictionary.
     """
     response = requests.get(
-        f"https://{AUTH_DOMAIN}/.well-known/openid-configuration"
+        f"https://{ID_PORTEN_AUTH_DOMAIN}/.well-known/openid-configuration"
     )
     jwks_uri = response.json()["jwks_uri"]
     jwks_response = requests.get(jwks_uri)
@@ -114,7 +115,7 @@ def get_jwks() -> dict:
     return jwks
 
 
-def load_public_certs(x5c: list):
+def load_public_certs(x5c: list) -> list:
     """Loads public certificates from x5c header."""
     return [
         x509.load_der_x509_certificate(
@@ -126,16 +127,19 @@ def load_public_certs(x5c: list):
 def get_id_token(
         client_id: str = ID_PORTEN_CLIENT_ID,
         scope: str = SCOPES,
-        test_port: int = ID_PORTEN_TEST_PORT,
-        redirect_uri: str = ID_PORTEN_REDIRECT_URI,
+        auth_domain: str = ID_PORTEN_AUTH_DOMAIN,
+        server_port: int = SERVER_PORT,
+        redirect_uri: str = REDIRECT_URI,
         server_timeout: int = 1000,
 ) -> dict:
     """
     Perform authentication and retrieve the ID token.
+    Default attributes are towards test environments.
 
     :param client_id: Client id for the integration.
     :param scope: Scopes, default is the ones that is required.
-    :param test_port: Port for the test server.
+    :param auth_domain: Environment specific auth domain.
+    :param server_port: Port for the server.
     :param redirect_uri: The redirect uri specified in the integration.
     :param server_timeout: How long a person use to log-in via ID porten.
     :return: Authorization headers as dict.
@@ -171,10 +175,10 @@ def get_id_token(
     }
     encoded_params = urlencode(authorize_query_params, safe="?&=_")
     # Connecting to the /authorize endpoint.
-    authorize_uri = f"https://{AUTH_DOMAIN}/authorize?{encoded_params}"
+    authorize_uri = f"https://{auth_domain}/authorize?{encoded_params}"
 
     # Starts the test server
-    server = HTTPServer(("127.0.0.1", test_port), BrowserRedirectHandler)
+    server = HTTPServer(("127.0.0.1", server_port), BrowserRedirectHandler)
 
     # Open web browser to get ID-porten authorization token.
     webbrowser.open(authorize_uri)
@@ -217,7 +221,7 @@ def get_id_token(
 
     # Connecting to the /token endpoint.
     response = requests.post(
-        "https://{}/token".format(AUTH_DOMAIN), headers=headers, data=payload
+        "https://{}/token".format(auth_domain), headers=headers, data=payload
     )
     if response.status_code != 200:
         print(response.status_code)
@@ -238,7 +242,7 @@ def get_id_token(
         auth_result["id_token"],
         public_key,
         algorithms=ALGORITHMS,
-        issuer=f"https://{AUTH_DOMAIN}/",
+        issuer=f"https://{auth_domain}/",
         audience=client_id,
         access_token=access_token,
     )
@@ -253,7 +257,7 @@ def get_id_token(
         access_token,
         public_key,
         algorithms=ALGORITHMS,
-        issuer=f"https://{AUTH_DOMAIN}/",
+        issuer=f"https://{auth_domain}/",
     )
 
     access_token_encoded = access_token.split(".", 3)[1]
