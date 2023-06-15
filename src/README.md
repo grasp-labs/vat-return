@@ -62,6 +62,14 @@ set SERVER_PORT=...
 set ORG_NUMBER=...
 ````
 
+Depending on your integration setup, you will have to change the
+get_id_porten_token.py code. This is dependent on how you set up the
+authorization in the integration. 
+In general, this is documented [here](https://docs.digdir.no/docs/idporten/oidc_old/oidc_protocol_token.html#client-authentication)
+- Are you using JWKs? - Then modify to use the correct values, example script 
+for JWKs in under src/scripts.
+- Are you using Virksomhetssertifikat? - Then modify the request body as well.
+
 Run your script.
 
 In production, remove the print statements in get_id_porten_token.py
