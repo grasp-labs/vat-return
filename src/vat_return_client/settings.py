@@ -31,7 +31,7 @@ INSTANCE_API_URL = f"{SUBMISSION_SERVICE}/instances"
 # The following attributes are decided by your integration setup.
 ID_PORTEN_CLIENT_ID = os.environ.get("CLIENT_ID", "23cc2587-ea4e-4a5f-aa5c-dfce3d6c5f09")
 REDIRECT_URI = os.environ.get("REDIRECT_URI", "http://localhost:12345/token")
-SERVER_PORT = os.environ.get("SERVER_PORT", 12345)
+SERVER_PORT = int(os.environ.get("SERVER_PORT", 12345))
 
 # These are constants and should not be changed.
 ALGORITHMS = ["RS256"]
