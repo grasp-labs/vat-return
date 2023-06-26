@@ -19,11 +19,13 @@ from cryptography import x509
 
 from settings import (
     ID_PORTEN_CLIENT_ID,
+    ID_PORTEN_CLIENT_SECRET,
     SERVER_PORT,
     REDIRECT_URI,
     ID_PORTEN_AUTH_DOMAIN,
     ALGORITHMS,
     SCOPES,
+    CLIENT_AUTHENTICATION_METHOD,
 )
 
 
@@ -217,6 +219,9 @@ def get_id_token(
         "client_id": client_id,
         "scope": scope,
     }
+    if CLIENT_AUTHENTICATION_METHOD == "client_secret_post":
+        payload["client_secret"] = ID_PORTEN_CLIENT_SECRET
+
     headers = {"Accept": "application/json"}
 
     # Connecting to the /token endpoint.
