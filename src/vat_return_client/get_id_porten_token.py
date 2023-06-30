@@ -22,10 +22,12 @@ from settings import (
     ID_PORTEN_CLIENT_SECRET,
     SERVER_PORT,
     REDIRECT_URI,
+    ID_PORTEN_JWK_URL,
     ID_PORTEN_AUTH_DOMAIN,
     ALGORITHMS,
     SCOPES,
     CLIENT_AUTHENTICATION_METHOD,
+    SERVER_TIMEOUT,
 )
 
 
@@ -102,15 +104,13 @@ def decode_dokument(dokument: dict) -> dict:
     return dokument
 
 
-def get_jwks() -> dict:
+def get_jwks(jwk_url: str = ID_PORTEN_JWK_URL) -> dict:
     """
     Retrieve the JSON Web Key Set (JWKS) from id porten.
 
     :returns: The JWKS as a dictionary.
     """
-    response = requests.get(
-        f"https://{ID_PORTEN_AUTH_DOMAIN}/.well-known/openid-configuration"
-    )
+    response = requests.get(jwk_url)
     jwks_uri = response.json()["jwks_uri"]
     jwks_response = requests.get(jwks_uri)
     jwks = jwks_response.json()
@@ -132,7 +132,7 @@ def get_id_token(
         auth_domain: str = ID_PORTEN_AUTH_DOMAIN,
         server_port: int = SERVER_PORT,
         redirect_uri: str = REDIRECT_URI,
-        server_timeout: int = 1000,
+        server_timeout: int = SERVER_TIMEOUT,
 ) -> dict:
     """
     Perform authentication and retrieve the ID token.

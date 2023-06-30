@@ -13,11 +13,13 @@ import requests
 
 class VatReturn:
     """
-    Client code. Before use, log into id porten and get the 'Id porten
-    access token'.
-    Set the appropriate altinn environment, defaults to test environment.
-    Set the appropriate id porten environment, defaults to test environment.
-    Set the instance api url appropriate for the environment, test as default.
+    Client code: Before using this code, please log into ID-porten and obtain
+    the 'ID-porten access token'. You can do this by following the process
+    outlined in the 'get_id_porten_token.py' file. Each method in this client
+    represents an action to be performed on Altinn's API for VAT Submission.
+    In the case of a backend solution implemented as an API, each endpoint
+    would invoke one of these methods. However, the login process can be
+    initiated during server startup by calling the 'set_altinn_token' method.
 
     Url patterns:
     instance = create_instance(...)

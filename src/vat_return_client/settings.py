@@ -1,12 +1,6 @@
 """
 Module to store settings required for the program to run.
 ref: https://skatteetaten.github.io/mva-meldingen/kompensasjon_eng/test/
-To run in production, set the following environment variables:
-BUILDING_MODE=prod
-CLIENT_ID=...
-REDIRECT_URI=...
-SERVER_PORT=...
-ORG_NUMBER=...
 """
 import os
 
@@ -14,6 +8,7 @@ BUILDING_MODE = os.environ.get("BUILDING_MODE", "test")
 
 # Environments / Domains
 ID_PORTEN_BASE = "oidc.difi.no" if BUILDING_MODE == "prod" else "oidc-ver2.difi.no"
+ID_PORTEN = "idporten.no" if BUILDING_MODE == "prod" else "test.idporten.no"  # To be changed with ID_PORTEN_BASE.
 ALTINN_BASE = "https://platform.altinn.no" if BUILDING_MODE == "prod" else "https://platform.tt02.altinn.no"
 VAT_BASE = "skd.apps.altinn.no" if BUILDING_MODE == "prod" else "skd.apps.tt02.altinn.no"
 VALIDATION_BASE = "idporten.api.skatteetaten.no" if BUILDING_MODE == "prod" else "idporten-api-sbstest.sits.no"
@@ -21,7 +16,7 @@ SUBMISSION_PATH_ENV = "v1" if BUILDING_MODE == "prod" else "etm2"
 
 # URLS
 ID_PORTEN_AUTH_DOMAIN = f"{ID_PORTEN_BASE}/idporten-oidc-provider"
-ID_PORTEN_INTEGRATION_URL = f"https://{ID_PORTEN_AUTH_DOMAIN}/.well-known/openid-configuration"
+ID_PORTEN_JWK_URL = f"https://{ID_PORTEN_BASE}/.well-known/openid-configuration"
 VALIDATION_SERVICE = f"https://{VALIDATION_BASE}/api/mva/grensesnittstoette/mva-melding/valider"
 ALTINN_TOKEN_EXCHANGE_URL = f"{ALTINN_BASE}/authentication/api/v1/exchange/id-porten"
 SUBMISSION_SERVICE = f"https://{VAT_BASE}/skd/mva-melding-innsending-{SUBMISSION_PATH_ENV}"
@@ -34,6 +29,7 @@ ID_PORTEN_CLIENT_SECRET = os.environ.get("CLIENT_SECRET", None)
 REDIRECT_URI = os.environ.get("REDIRECT_URI", "http://localhost:12345/token")
 SERVER_PORT = int(os.environ.get("SERVER_PORT", 12345))
 CLIENT_AUTHENTICATION_METHOD = os.environ.get("CLIENT_AUTHENTICATION_METHOD", None)
+SERVER_TIMEOUT = os.environ.get("SERVER_TIMEOUT", 1000)
 
 # These are constants and should not be changed.
 ALGORITHMS = ["RS256"]

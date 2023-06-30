@@ -18,6 +18,9 @@ from settings import (
     ORG_NUMBER,
 )
 
+# Exit the script after validation ov a VAT message.
+VALIDATE_ONLY = True
+
 
 def get_example_files(file_name: str, read_bytes: bool = False):
     from pathlib import Path
@@ -50,6 +53,8 @@ def vat_return_process(org_number: str):
     print("---- Validating -----")
     validation = vat_client.validate_tax_return(body=mva_message)
     print(validation)
+    if VALIDATE_ONLY:
+        return
 
     print("---- Creating Instance -----")
     instance = vat_client.create_instance(organization_number=org_number)
